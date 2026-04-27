@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "B9JoKQ3BNn4=",
+  "dgSpecHash": "4JTmrqK5Na4=",
   "success": true,
-  "projectFilePath": "C:\\Users\\pablo\\source\\repos\\WebApplication1\\WebApplication1\\WebApplication1.csproj",
+  "projectFilePath": "C:\\Users\\pablo\\Documents\\carrera\\modular\\BalanceProAPI\\WebApplication1\\WebApplication1\\WebApplication1.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\pablo\\.nuget\\packages\\azure.core\\1.47.1\\azure.core.1.47.1.nupkg.sha512",
     "C:\\Users\\pablo\\.nuget\\packages\\azure.identity\\1.14.2\\azure.identity.1.14.2.nupkg.sha512",
@@ -136,5 +136,30 @@
     "C:\\Users\\pablo\\.nuget\\packages\\system.security.cryptography.pkcs\\9.0.4\\system.security.cryptography.pkcs.9.0.4.nupkg.sha512",
     "C:\\Users\\pablo\\.nuget\\packages\\system.security.cryptography.protecteddata\\9.0.6\\system.security.cryptography.protecteddata.9.0.6.nupkg.sha512"
   ],
-  "logs": []
+  "logs": [
+    {
+      "code": "NU1901",
+      "level": "Warning",
+      "message": "El paquete \"NuGet.Packaging\" 6.12.1 tiene una vulnerabilidad de gravedad baja conocida, https://github.com/advisories/GHSA-g4vj-cjjj-v7hg",
+      "projectPath": "C:\\Users\\pablo\\Documents\\carrera\\modular\\BalanceProAPI\\WebApplication1\\WebApplication1\\WebApplication1.csproj",
+      "warningLevel": 1,
+      "filePath": "C:\\Users\\pablo\\Documents\\carrera\\modular\\BalanceProAPI\\WebApplication1\\WebApplication1\\WebApplication1.csproj",
+      "libraryId": "NuGet.Packaging",
+      "targetGraphs": [
+        "net10.0"
+      ]
+    },
+    {
+      "code": "NU1901",
+      "level": "Warning",
+      "message": "El paquete \"NuGet.Protocol\" 6.12.1 tiene una vulnerabilidad de gravedad baja conocida, https://github.com/advisories/GHSA-g4vj-cjjj-v7hg",
+      "projectPath": "C:\\Users\\pablo\\Documents\\carrera\\modular\\BalanceProAPI\\WebApplication1\\WebApplication1\\WebApplication1.csproj",
+      "warningLevel": 1,
+      "filePath": "C:\\Users\\pablo\\Documents\\carrera\\modular\\BalanceProAPI\\WebApplication1\\WebApplication1\\WebApplication1.csproj",
+      "libraryId": "NuGet.Protocol",
+      "targetGraphs": [
+        "net10.0"
+      ]
+    }
+  ]
 }
