@@ -11,5 +11,5 @@ FROM mcr.microsoft.com/dotnet/aspnet:10.0
 WORKDIR /app
 COPY --from=build /publish .
 
-EXPOSE 7252
+EXPOSE 5293
 ENTRYPOINT ["dotnet", "WebApplication1.dll"]
