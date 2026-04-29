@@ -1,7 +1,7 @@
 # BalancePro API
 API RESTful desarrollada en ASP.NET Core 10 para la gestión de finanzas personales. Permite administrar usuarios, ingresos y gastos mediante endpoints documentados con Swagger/OpenAPI.
 
-## 🚀 Tecnologías
+##  Tecnologías
 
 ASP.NET Core 10
 Entity Framework Core
@@ -10,14 +10,14 @@ Docker
 Swagger / OpenAPI
 
 
-## 📋 Requisitos previos
+##  Requisitos previos
 
 .NET 10 SDK
 SQL Server o Docker
 Visual Studio 2022 o VS Code
 
 
-## ⚙️ Configuración
+## Configuración
 1. Clona el repositorio:
 bashgit clone https://github.com/jpmfranco/BalancePro.git
 cd BalancePro
@@ -32,13 +32,13 @@ bashdotnet run
 5. Accede al Swagger:
 http://localhost:7252/swagger
 
-## 🐳 Correr con Docker
+## Correr con Docker
 1. Construye la imagen:
 bashdocker build -t balancepro-api .
 2. O usa Docker Compose desde la raíz del proyecto:
 bashdocker-compose up --build
 
-## 📡 Endpoints
+## Endpoints
 Usuarios
 MétodoEndpointDescripciónGET/api/Usuarios/ObtenerUsuariosObtener todos los usuariosGET/api/Usuarios/ObtenerUsuarioPorID/{id}Obtener usuario por IDPOST/api/Usuarios/CrearUsuarioCrear nuevo usuarioPUT/api/Usuarios/EditarUsuario/{id}Editar usuarioPUT/api/Usuarios/CambiarContrasena/{id}Cambiar contraseña
 Gastos
@@ -46,37 +46,14 @@ MétodoEndpointDescripciónGET/api/Gastoes/ObtenerGastoObtener todos los gastosG
 Ingresos
 MétodoEndpointDescripciónGET/api/Ingresoes/ObtenerIngresoObtener todos los ingresosGET/api/Ingresoes/ObtenerIngresoPorID/{id}Obtener ingreso por IDGET/api/Ingresoes/ObtenerSumaTotalSuma total de ingresos por usuarioPOST/api/Ingresoes/CrearIngresoRegistrar nuevo ingresoPUT/api/Ingresoes/EditarIngreso/{id}Editar ingresoDELETE/api/Ingresoes/EliminarIngreso/{id}Eliminar ingreso
 
-## 🗄️ Modelo de base de datos
-Usuarios
-├── id (PK, IDENTITY)
-├── nombre
-├── correo
-├── contrasena
-├── edad
-├── genero
-├── celular
-├── fechaRegistro
-└── activo
+## Modelo de base de datos
+<img width="874" height="749" alt="image" src="https://github.com/user-attachments/assets/2f120e3c-fa3a-4928-8922-312f089be3a5" />
 
-Ingresos
-├── id (PK, IDENTITY)
-├── descripcion
-├── fecha
-├── monto
-└── idUsuario (FK → Usuarios)
 
-Gastos
-├── id (PK, IDENTITY)
-├── descripcion
-├── categoria
-├── fecha
-├── monto
-└── idUsuario (FK → Usuarios)
-
-## 🌐 Variables de entorno (Docker)
+## Variables de entorno (Docker)
 VariableDescripciónConnectionStrings__DefaultConnectionCadena de conexión a SQL ServerASPNETCORE_URLSPuerto donde corre la APIASPNETCORE_ENVIRONMENTEntorno de ejecución (Development/Production)
 
-## 👥 Autores
+## Autores
 
 ### Juan Pablo Mayagoitia Franco
 ### Luis Angel Reyes Valdivia
@@ -84,5 +61,5 @@ VariableDescripciónConnectionStrings__DefaultConnectionCadena de conexión a SQ
 ### Asesor: Jose Juan Meza Espinosa
 ### CUCEI, Universidad de Guadalajara
 
-## 📄 Licencia
+## Licencia
 Propietario del código — Todos los derechos reservados © 2026
