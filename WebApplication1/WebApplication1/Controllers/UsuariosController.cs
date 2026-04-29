@@ -15,7 +15,7 @@ public class UsuarioDto
     public int Edad { get; set; }
     public string Genero { get; set; }
     public string Correo { get; set; }
-    public long Celular { get; set; }
+    public int Celular { get; set; }
     public string Contrasena { get; set; }
     public DateTime FechaRegistro { get; set; }
     public bool Activo { get; set; }
@@ -37,10 +37,6 @@ public class UsuariosController : ControllerBase
     [HttpPost("CrearUsuario")]
     public async Task<IActionResult> Crear(UsuarioDto user)
     {
-        var celularStr = user.Celular.ToString();
-        if (celularStr.Length != 10)
-            return BadRequest(new { mensaje = "El número de celular debe tener exactamente 10 dígitos." });
-
         var usuario = new Usuario
         {
             Nombre = user.Nombre,
