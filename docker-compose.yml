@@ -1,0 +1,70 @@
+services:
+
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2025-latest
+    environment:
+      SA_PASSWORD: "TuPassword123!"
+      ACCEPT_EULA: "Y"
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqldata:/var/opt/mssql
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P 'TuPassword123!' -Q 'SELECT 1' -No"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    networks:
+      - balancepro_network
+
+  csharp-api:
+    build: ./BalanceProAPI/WebApplication1/WebApplication1
+    ports:
+      - "7252:8080"
+    environment:
+      - ASPNETCORE_URLS=http://+:8080
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Server=sqlserver,1433;Database=BalancePro;User=sa;Password=TuPassword123!;TrustServerCertificate=True
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    networks:
+      - balancepro_network
+
+  angular:
+    build: ./Ingresos y egresos/AppEcono
+    ports:
+      - "4200:80"
+    depends_on:
+      - csharp-api
+      - python-ia
+      - python-gemini
+    networks:
+      - balancepro_network
+
+  python-ia:
+    build: ./PythonIA
+    container_name: ia_python
+    ports:
+      - "5005:5002"
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    networks:
+      - balancepro_network
+
+  python-gemini:
+    build: ./PythonGemini
+    container_name: gemini_python
+    ports:
+      - "8080:8080"
+    networks:
+      - balancepro_network
+
+networks:
+  balancepro_network:
+    driver: bridge
+
+volumes:
+  sqldata:
