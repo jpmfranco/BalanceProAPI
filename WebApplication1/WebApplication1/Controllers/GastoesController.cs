@@ -16,7 +16,7 @@ public class GastoDto
     public DateTime Fecha { get; set; }
     public int Monto { get; set; }
     public int IdUsuario { get; set; }
-
+    public string Clasificacion { get; set; }
 }
 
 [ApiController]
@@ -39,14 +39,17 @@ public class GastoesController : ControllerBase
     public async Task<IActionResult> Crear(GastoDto gas)
     {
         if (gas == null) return BadRequest();
+
         var gasto = new Gasto()
         {
             Descripcion = gas.Descripcion,
             Categoria = gas.Categoria,
+            Clasificacion = gas.Clasificacion,
             Fecha = gas.Fecha,
             Monto = gas.Monto,
             IdUsuario = gas.IdUsuario
         };
+
         _context.Gastos.Add(gasto);
         await _context.SaveChangesAsync();
         return Ok(gasto);

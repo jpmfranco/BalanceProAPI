@@ -1,31 +1,122 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using WebApplication1.Data; // Verifica que tus archivos en la carpeta Data tengan este namespace
+using WebApplication1.Data;
+using WebApplication1.Models;
 using System.Net.Http.Json;
 
 namespace WebApplication1.Controllers
 {
+    public class PerfilDto
+    {
+        public int Perfil { get; set; }
+        public int Estabilidad { get; set; }
+        public int Categoria { get; set; }
+        public double ingresos { get; set; }
+        public int TendIngresos { get; set; }
+        public int TendEgresos { get; set; }
+        public int Control { get; set; }
+        public int Planificacion { get; set; }
+        public double gastosPct { get; set; }
+    }
+
     [Route("api/[controller]")]
     [ApiController]
     public class IAController : ControllerBase
     {
-        // Usamos los nombres exactos que detectó Entity Framework antes
         private readonly WebApplication1.Data.Gastodbcontext _contextGastos;
         private readonly WebApplication1.Data.IngresoDbContext _contextIngresos;
+        private readonly WebApplication1.Data.PerfilFinancieroDbContext _contextPerfil;
 
-        public IAController(Gastodbcontext contextGastos, IngresoDbContext contextIngresos)
+        public IAController(
+            Gastodbcontext contextGastos,
+            IngresoDbContext contextIngresos,
+            PerfilFinancieroDbContext contextPerfil)
         {
             _contextGastos = contextGastos;
             _contextIngresos = contextIngresos;
+            _contextPerfil = contextPerfil;
         }
 
+        // GET: usado por proyeccion.ts — recupera el perfil guardado del usuario
         [HttpGet("analizar/{usuarioId}")]
-        public async Task<IActionResult> AnalizarFinanzas(int usuarioId)
+        public async Task<IActionResult> AnalizarFinanzasGet(int usuarioId)
         {
-            try 
+            var perfilGuardado = await _contextPerfil.PerfilesFinancieros
+                .FirstOrDefaultAsync(p => p.IdUsuario == usuarioId);
+
+            if (perfilGuardado == null)
+                return NotFound("El usuario aún no ha configurado su perfil financiero.");
+            var listaIngresos = await _contextIngresos.Ingresos
+                  .Where(i => i.IdUsuario == usuarioId).ToListAsync();
+            var listaGastos = await _contextGastos.Gastos
+                .Where(g => g.IdUsuario == usuarioId).ToListAsync();
+            decimal totalIngresos = listaIngresos.Sum(i => i.Monto);
+            decimal totalGastos = listaGastos.Sum(g => g.Monto);
+
+            double gastoPct = totalIngresos > 0? (double)(totalGastos / totalIngresos) * 100: 0;
+
+
+            var perfil = new PerfilDto
             {
-                // 1. Obtener datos reales de SQL Server
-                // Nota: Asegúrate que tus modelos tengan la propiedad 'Monto' y 'UsuarioId'
+                Perfil = perfilGuardado.Perfil,
+                Estabilidad = perfilGuardado.Estabilidad,
+                Categoria = perfilGuardado.Categoria,
+                ingresos = (double)totalIngresos,
+                gastosPct = gastoPct,
+                TendIngresos = perfilGuardado.TendIngresos,
+                TendEgresos = perfilGuardado.TendEgresos,
+                Control = perfilGuardado.Control,
+                Planificacion = perfilGuardado.Planificacion
+            };
+
+            return await EjecutarAnalisis(usuarioId, perfil);
+        }
+
+        // POST: usado por perfil-financiero.ts — guarda el perfil y ejecuta el análisis
+        [HttpPost("analizar/{usuarioId}")]
+        public async Task<IActionResult> AnalizarFinanzasPost(int usuarioId, [FromBody] PerfilDto perfil)
+        {
+            // Upsert: actualiza si existe, crea si no
+            var perfilExistente = await _contextPerfil.PerfilesFinancieros
+                .FirstOrDefaultAsync(p => p.IdUsuario == usuarioId);
+
+            if (perfilExistente == null)
+            {
+                _contextPerfil.PerfilesFinancieros.Add(new PerfilFinanciero
+                {
+                    IdUsuario = usuarioId,
+                    Perfil = perfil.Perfil,
+                    Estabilidad = perfil.Estabilidad,
+                    Categoria = perfil.Categoria,
+                    TendIngresos = perfil.TendIngresos,
+                    TendEgresos = perfil.TendEgresos,
+                    Control = perfil.Control,
+                    Planificacion = perfil.Planificacion,
+                    FechaCreacion = DateTime.UtcNow
+                });
+            }
+            else
+            {
+                perfilExistente.Perfil = perfil.Perfil;
+                perfilExistente.Estabilidad = perfil.Estabilidad;
+                perfilExistente.Categoria = perfil.Categoria;
+                perfilExistente.TendIngresos = perfil.TendIngresos;
+                perfilExistente.TendEgresos = perfil.TendEgresos;
+                perfilExistente.Control = perfil.Control;
+                perfilExistente.Planificacion = perfil.Planificacion;
+                perfilExistente.FechaCreacion = DateTime.UtcNow;
+            }
+
+            await _contextPerfil.SaveChangesAsync();
+
+            return await EjecutarAnalisis(usuarioId, perfil);
+        }
+
+        // Lógica compartida entre GET y POST
+        private async Task<IActionResult> EjecutarAnalisis(int usuarioId, PerfilDto perfil)
+        {
+            try
+            {
                 var listaIngresos = await _contextIngresos.Ingresos
                     .Where(i => i.IdUsuario == usuarioId)
                     .ToListAsync();
@@ -37,40 +128,37 @@ namespace WebApplication1.Controllers
                 decimal totalIngresos = listaIngresos.Sum(i => i.Monto);
                 decimal totalGastos = listaGastos.Sum(g => g.Monto);
 
-                if (totalIngresos == 0) 
-                    return BadRequest("El usuario no tiene ingresos registrados para el análisis.");
-
-                // 2. Calcular variables para tu IA (basado en tu data-set.csv)
-                double gastoPct = (double)(totalGastos / totalIngresos) * 100;
+                double gastoPct = totalIngresos > 0
+                    ? (double)(totalGastos / totalIngresos) * 100
+                    : 0;
 
                 var datosParaPython = new
                 {
-                    perfil = 1, // Valor por defecto (Empleado)
+                    perfil = perfil.Perfil,
                     ingresos = (double)totalIngresos,
-                    estabilidad = 1,
+                    estabilidad = perfil.Estabilidad,
                     gasto_pct = gastoPct,
-                    categoria = 1,
-                    tend_ingresos = 1,
-                    tend_egresos = 0,
-                    control = 4,
-                    planificacion = 3
+                    categoria = perfil.Categoria,
+                    tend_ingresos = perfil.TendIngresos,
+                    tend_egresos = perfil.TendEgresos,
+                    control = perfil.Control,
+                    planificacion = perfil.Planificacion
                 };
 
-                // 3. Llamar al microservicio de Python en Docker
                 using var client = new HttpClient();
-                // Importante: "ia-service" es el nombre en tu docker-compose.yml
-                var response = await client.PostAsJsonAsync("http://localhost:5002/predict", datosParaPython);
-                
+                var response = await client.PostAsJsonAsync("http://python-ia:5002/predict", datosParaPython);
+
                 if (response.IsSuccessStatusCode)
                 {
                     var prediccion = await response.Content.ReadFromJsonAsync<dynamic>();
-                    return Ok(new { 
-                        mensaje = "Análisis de IA BalancePro", 
+                    return Ok(new
+                    {
+                        mensaje = "Análisis de IA BalancePro",
                         resumenFinanciero = new { totalIngresos, totalGastos, porcentajeGasto = gastoPct },
-                        prediccionIA = prediccion 
+                        prediccionIA = prediccion
                     });
                 }
-                
+
                 return StatusCode(502, "El servicio de IA (Python) no respondió correctamente.");
             }
             catch (Exception ex)
@@ -78,5 +166,16 @@ namespace WebApplication1.Controllers
                 return StatusCode(500, $"Error interno: {ex.Message}");
             }
         }
+    }
+    public class PythonResponse
+    {
+        public string status { get; set; }
+        public List<ProyeccionData> proyecciones { get; set; }
+    }
+
+    public class ProyeccionData
+    {
+        public string mes { get; set; }
+        public double valor { get; set; }
     }
 }

@@ -48,10 +48,13 @@ public class IngresoesController : ControllerBase
         return Ok(ingreso);
     }
 
-    // READ ALL
+    // READ ALL - filtra por idUsuario si se pasa el query param ?id=
     [HttpGet("ObtenerIngreso")]
-    public async Task<IActionResult> ObtenerTodos()
+    public async Task<IActionResult> ObtenerTodos([FromQuery] int? id)
     {
+        if (id.HasValue && id.Value > 0)
+            return Ok(await _context.Ingresos.Where(i => i.IdUsuario == id.Value).ToListAsync());
+
         return Ok(await _context.Ingresos.ToListAsync());
     }
 

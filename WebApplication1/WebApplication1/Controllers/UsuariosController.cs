@@ -15,7 +15,7 @@ public class UsuarioDto
     public int Edad { get; set; }
     public string Genero { get; set; }
     public string Correo { get; set; }
-    public int Celular { get; set; }
+    public long Celular { get; set; }
     public string Contrasena { get; set; }
     public DateTime FechaRegistro { get; set; }
     public bool Activo { get; set; }
