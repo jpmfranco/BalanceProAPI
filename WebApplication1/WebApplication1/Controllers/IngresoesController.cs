@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WebApplication1.Data;
 using WebApplication1.Models;
@@ -15,20 +10,19 @@ public class IngresoDto
     public DateTime Fecha { get; set; }
     public int Monto { get; set; }
     public int IdUsuario { get; set; }
-
 }
 
 [ApiController]
 [Route("api/[controller]")]
 public class IngresoesController : ControllerBase
 {
-    private readonly IngresoDbContext _context;
-    private readonly IngresoesService ingresoesService;
+    private readonly ApplicationDbContext _context;
+    private readonly IngresoesService _ingresoService;
 
-    public IngresoesController(IngresoDbContext context,IngresoesService _ingresoService)
+    public IngresoesController(ApplicationDbContext context, IngresoesService ingresoService)
     {
         _context = context;
-        ingresoesService = _ingresoService;
+        _ingresoService = ingresoService;
     }
 
     // CREATE
@@ -36,53 +30,69 @@ public class IngresoesController : ControllerBase
     public async Task<IActionResult> Crear(IngresoDto ing)
     {
         if (ing == null) return BadRequest();
-        var ingreso = new Ingreso()
+
+        // Verificar que el usuario existe
+        var usuarioExiste = await _context.Usuarios.AnyAsync(u => u.Id == ing.IdUsuario);
+        if (!usuarioExiste)
+            return BadRequest(new { mensaje = "Usuario no encontrado" });
+
+        var ingreso = new Ingreso
         {
-            Descripcion  = ing.Descripcion,
+            Descripcion = ing.Descripcion,
             Fecha = ing.Fecha,
             Monto = ing.Monto,
             IdUsuario = ing.IdUsuario
         };
+
         _context.Ingresos.Add(ingreso);
         await _context.SaveChangesAsync();
         return Ok(ingreso);
     }
 
-    // READ ALL - filtra por idUsuario si se pasa el query param ?id=
+    // READ ALL
     [HttpGet("ObtenerIngreso")]
     public async Task<IActionResult> ObtenerTodos([FromQuery] int? id)
     {
-        if (id.HasValue && id.Value > 0)
-            return Ok(await _context.Ingresos.Where(i => i.IdUsuario == id.Value).ToListAsync());
+        var query = _context.Ingresos.AsQueryable();
 
-        return Ok(await _context.Ingresos.ToListAsync());
+        if (id.HasValue && id.Value > 0)
+            query = query.Where(i => i.IdUsuario == id.Value);
+
+        return Ok(await query.OrderByDescending(i => i.Fecha).ToListAsync());
     }
 
     // READ BY ID
     [HttpGet("ObtenerIngresoporID/{id}")]
     public async Task<IActionResult> Obtener(int id)
     {
-        var gasto = await _context.Ingresos.FindAsync(id);
-        if (gasto == null) return NotFound();
-        return Ok(gasto);
+        var ingreso = await _context.Ingresos.FindAsync(id);
+        if (ingreso == null) return NotFound();
+        return Ok(ingreso);
     }
+
+    // SUMA TOTAL
     [HttpGet("ObtenerSumaTotal")]
     public async Task<IActionResult> ObtenerSumaTotal(int id)
     {
         if (id <= 0)
             return BadRequest("El id no es válido");
-        var count = await ingresoesService.Obtenertotaltransacciones(id);
-        var suma = await ingresoesService.ObtenerSumaTotalUser(id);
 
+        var count = await _ingresoService.Obtenertotaltransacciones(id);
+        var suma = await _ingresoService.ObtenerSumaTotalUser(id);
         return Ok(new { userId = id, montoTotal = suma, totaltrans = count });
     }
+
     // UPDATE
     [HttpPut("EditarIngreso/{id}")]
-    public async Task<IActionResult> Actualizar(int id, Ingreso ingreso)
+    public async Task<IActionResult> Actualizar(int id, IngresoDto ingresoDto)
     {
-        if (id != ingreso.Id) return BadRequest();
+        var ingreso = await _context.Ingresos.FindAsync(id);
+        if (ingreso == null) return NotFound();
 
-        _context.Entry(ingreso).State = EntityState.Modified;
+        ingreso.Descripcion = ingresoDto.Descripcion;
+        ingreso.Fecha = ingresoDto.Fecha;
+        ingreso.Monto = ingresoDto.Monto;
+
         await _context.SaveChangesAsync();
         return NoContent();
     }
@@ -91,10 +101,9 @@ public class IngresoesController : ControllerBase
     [HttpDelete("EliminarIngreso/{id}")]
     public async Task<IActionResult> Eliminar(int id)
     {
-        var producto = await _context.Ingresos.FindAsync(id);
-        if (producto == null) return NotFound();
-
-        _context.Ingresos.Remove(producto);
+        var ingreso = await _context.Ingresos.FindAsync(id);
+        if (ingreso == null) return NotFound();
+        _context.Ingresos.Remove(ingreso);
         await _context.SaveChangesAsync();
         return NoContent();
     }

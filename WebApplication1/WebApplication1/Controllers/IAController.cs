@@ -23,38 +23,36 @@ namespace WebApplication1.Controllers
     [ApiController]
     public class IAController : ControllerBase
     {
-        private readonly WebApplication1.Data.Gastodbcontext _contextGastos;
-        private readonly WebApplication1.Data.IngresoDbContext _contextIngresos;
-        private readonly WebApplication1.Data.PerfilFinancieroDbContext _contextPerfil;
+        private readonly ApplicationDbContext _context;
+        private readonly IHttpClientFactory _httpClientFactory;
 
-        public IAController(
-            Gastodbcontext contextGastos,
-            IngresoDbContext contextIngresos,
-            PerfilFinancieroDbContext contextPerfil)
+        public IAController(ApplicationDbContext context, IHttpClientFactory httpClientFactory)
         {
-            _contextGastos = contextGastos;
-            _contextIngresos = contextIngresos;
-            _contextPerfil = contextPerfil;
+            _context = context;
+            _httpClientFactory = httpClientFactory;
         }
 
-        // GET: usado por proyeccion.ts — recupera el perfil guardado del usuario
+        // GET: recupera el perfil guardado del usuario
         [HttpGet("analizar/{usuarioId}")]
         public async Task<IActionResult> AnalizarFinanzasGet(int usuarioId)
         {
-            var perfilGuardado = await _contextPerfil.PerfilesFinancieros
+            var perfilGuardado = await _context.PerfilesFinancieros
                 .FirstOrDefaultAsync(p => p.IdUsuario == usuarioId);
 
             if (perfilGuardado == null)
                 return NotFound("El usuario aún no ha configurado su perfil financiero.");
-            var listaIngresos = await _contextIngresos.Ingresos
-                  .Where(i => i.IdUsuario == usuarioId).ToListAsync();
-            var listaGastos = await _contextGastos.Gastos
-                .Where(g => g.IdUsuario == usuarioId).ToListAsync();
-            decimal totalIngresos = listaIngresos.Sum(i => i.Monto);
-            decimal totalGastos = listaGastos.Sum(g => g.Monto);
 
-            double gastoPct = totalIngresos > 0? (double)(totalGastos / totalIngresos) * 100: 0;
+            var totalIngresos = await _context.Ingresos
+                .Where(i => i.IdUsuario == usuarioId)
+                .SumAsync(i => (decimal)i.Monto);
 
+            var totalGastos = await _context.Gastos
+                .Where(g => g.IdUsuario == usuarioId)
+                .SumAsync(g => (decimal)g.Monto);
+
+            double gastoPct = totalIngresos > 0
+                ? (double)(totalGastos / totalIngresos) * 100
+                : 0;
 
             var perfil = new PerfilDto
             {
@@ -72,17 +70,17 @@ namespace WebApplication1.Controllers
             return await EjecutarAnalisis(usuarioId, perfil);
         }
 
-        // POST: usado por perfil-financiero.ts — guarda el perfil y ejecuta el análisis
+        // POST: guarda el perfil y ejecuta el análisis
         [HttpPost("analizar/{usuarioId}")]
         public async Task<IActionResult> AnalizarFinanzasPost(int usuarioId, [FromBody] PerfilDto perfil)
         {
             // Upsert: actualiza si existe, crea si no
-            var perfilExistente = await _contextPerfil.PerfilesFinancieros
+            var perfilExistente = await _context.PerfilesFinancieros
                 .FirstOrDefaultAsync(p => p.IdUsuario == usuarioId);
 
             if (perfilExistente == null)
             {
-                _contextPerfil.PerfilesFinancieros.Add(new PerfilFinanciero
+                _context.PerfilesFinancieros.Add(new PerfilFinanciero
                 {
                     IdUsuario = usuarioId,
                     Perfil = perfil.Perfil,
@@ -107,8 +105,7 @@ namespace WebApplication1.Controllers
                 perfilExistente.FechaCreacion = DateTime.UtcNow;
             }
 
-            await _contextPerfil.SaveChangesAsync();
-
+            await _context.SaveChangesAsync();
             return await EjecutarAnalisis(usuarioId, perfil);
         }
 
@@ -117,16 +114,13 @@ namespace WebApplication1.Controllers
         {
             try
             {
-                var listaIngresos = await _contextIngresos.Ingresos
+                var totalIngresos = await _context.Ingresos
                     .Where(i => i.IdUsuario == usuarioId)
-                    .ToListAsync();
+                    .SumAsync(i => (decimal)i.Monto);
 
-                var listaGastos = await _contextGastos.Gastos
+                var totalGastos = await _context.Gastos
                     .Where(g => g.IdUsuario == usuarioId)
-                    .ToListAsync();
-
-                decimal totalIngresos = listaIngresos.Sum(i => i.Monto);
-                decimal totalGastos = listaGastos.Sum(g => g.Monto);
+                    .SumAsync(g => (decimal)g.Monto);
 
                 double gastoPct = totalIngresos > 0
                     ? (double)(totalGastos / totalIngresos) * 100
@@ -145,8 +139,13 @@ namespace WebApplication1.Controllers
                     planificacion = perfil.Planificacion
                 };
 
-                using var client = new HttpClient();
-                var response = await client.PostAsJsonAsync("http://python-ia:5002/predict", datosParaPython);
+                // URL del servicio Python desde configuración
+                var pythonUrl = _context.Database.GetConnectionString() != null
+                    ? "http://python-ia:5002/predict"
+                    : "http://localhost:5002/predict";
+
+                var client = _httpClientFactory.CreateClient();
+                var response = await client.PostAsJsonAsync(pythonUrl, datosParaPython);
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -154,12 +153,21 @@ namespace WebApplication1.Controllers
                     return Ok(new
                     {
                         mensaje = "Análisis de IA BalancePro",
-                        resumenFinanciero = new { totalIngresos, totalGastos, porcentajeGasto = gastoPct },
+                        resumenFinanciero = new
+                        {
+                            totalIngresos,
+                            totalGastos,
+                            porcentajeGasto = gastoPct
+                        },
                         prediccionIA = prediccion
                     });
                 }
 
                 return StatusCode(502, "El servicio de IA (Python) no respondió correctamente.");
+            }
+            catch (HttpRequestException)
+            {
+                return StatusCode(503, "No se pudo conectar al servicio de IA.");
             }
             catch (Exception ex)
             {
@@ -167,6 +175,7 @@ namespace WebApplication1.Controllers
             }
         }
     }
+
     public class PythonResponse
     {
         public string status { get; set; }

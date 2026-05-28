@@ -1,7 +1,6 @@
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi;
 using System.Text;
 using WebApplication1.Data;
 using WebApplication1.Services;
@@ -15,40 +14,29 @@ builder.Services.AddScoped<GastoesService>();
 builder.Services.AddScoped<IngresoesService>();
 
 builder.Services.AddControllers();
+builder.Services.AddHttpClient();
 builder.Services.AddEndpointsApiExplorer();
 
-// Swagger solo en desarrollo
 if (builder.Environment.IsDevelopment())
 {
     builder.Services.AddSwaggerGen();
 }
 
 // ============================================
-// BASE DE DATOS
+// BASE DE DATOS (UN SOLO DBCONTEXT)
 // ============================================
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
-builder.Services.AddDbContext<Gastodbcontext>(options =>
-    options.UseSqlServer(connectionString));
-
-builder.Services.AddDbContext<IngresoDbContext>(options =>
-    options.UseSqlServer(connectionString));
-
-builder.Services.AddDbContext<UsuarioDbContext>(options =>
-    options.UseSqlServer(connectionString));
-
-builder.Services.AddDbContext<PerfilFinancieroDbContext>(options =>
-    options.UseSqlServer(connectionString));
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseNpgsql(connectionString));
 
 // ============================================
-// JWT AUTENTICACIÓN
+// JWT
 // ============================================
 var jwtSecret = builder.Configuration["Jwt:Secret"];
 
 if (string.IsNullOrEmpty(jwtSecret) || jwtSecret.Length < 32)
-{
-    throw new Exception("JWT Secret inválido. Debe tener mínimo 32 caracteres.");
-}
+    throw new Exception("JWT Secret inválido. Mínimo 32 caracteres.");
 
 var key = Encoding.ASCII.GetBytes(jwtSecret);
 
@@ -78,9 +66,7 @@ builder.Services.AddAuthentication(options =>
         OnAuthenticationFailed = context =>
         {
             if (context.Exception is SecurityTokenExpiredException)
-            {
                 context.Response.Headers.Append("Token-Expired", "true");
-            }
             return Task.CompletedTask;
         }
     };
@@ -89,7 +75,7 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddAuthorization();
 
 // ============================================
-// CORS SEGURO
+// CORS
 // ============================================
 var allowedOrigins = builder.Configuration
     .GetSection("AllowedOrigins")
@@ -113,7 +99,7 @@ builder.Services.AddCors(options =>
 var app = builder.Build();
 
 // ============================================
-// MIGRACIONES
+// MIGRACIONES (UN SOLO DBCONTEXT)
 // ============================================
 using (var scope = app.Services.CreateScope())
 {
@@ -121,10 +107,8 @@ using (var scope = app.Services.CreateScope())
     var logger = services.GetRequiredService<ILogger<Program>>();
     try
     {
-        services.GetRequiredService<UsuarioDbContext>().Database.Migrate();
-        services.GetRequiredService<Gastodbcontext>().Database.Migrate();
-        services.GetRequiredService<IngresoDbContext>().Database.Migrate();
-        services.GetRequiredService<PerfilFinancieroDbContext>().Database.Migrate();
+        var context = services.GetRequiredService<ApplicationDbContext>();
+        context.Database.Migrate();
         logger.LogInformation("✅ Migraciones aplicadas correctamente");
     }
     catch (Exception ex)
@@ -134,29 +118,20 @@ using (var scope = app.Services.CreateScope())
 }
 
 // ============================================
-// PIPELINE (ORDEN IMPORTANTE)
+// PIPELINE
 // ============================================
-
-// Swagger solo en desarrollo
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
-// HTTPS
 if (app.Environment.IsProduction())
-{
     app.UseHsts();
-}
+
 app.UseHttpsRedirection();
-
-// CORS antes de Authentication
 app.UseCors("BalanceProPolicy");
-
-// Auth
 app.UseAuthentication();
 app.UseAuthorization();
-
 app.MapControllers();
 app.Run();

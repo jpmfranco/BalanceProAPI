@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WebApplication1.Data;
 using WebApplication1.Models;
@@ -23,15 +18,13 @@ public class GastoDto
 [Route("api/[controller]")]
 public class GastoesController : ControllerBase
 {
-    private readonly Gastodbcontext _context;
+    private readonly ApplicationDbContext _context;
     private readonly GastoesService _gastoService;
 
-
-
-    public GastoesController(Gastodbcontext context, GastoesService gastoService)
+    public GastoesController(ApplicationDbContext context, GastoesService gastoService)
     {
         _context = context;
-        this._gastoService = gastoService;
+        _gastoService = gastoService;
     }
 
     // CREATE
@@ -40,7 +33,12 @@ public class GastoesController : ControllerBase
     {
         if (gas == null) return BadRequest();
 
-        var gasto = new Gasto()
+        // Verificar que el usuario existe
+        var usuarioExiste = await _context.Usuarios.AnyAsync(u => u.Id == gas.IdUsuario);
+        if (!usuarioExiste)
+            return BadRequest(new { mensaje = "Usuario no encontrado" });
+
+        var gasto = new Gasto
         {
             Descripcion = gas.Descripcion,
             Categoria = gas.Categoria,
@@ -57,9 +55,14 @@ public class GastoesController : ControllerBase
 
     // READ ALL
     [HttpGet("ObtenerGasto")]
-    public async Task<IActionResult> ObtenerTodos()
+    public async Task<IActionResult> ObtenerTodos([FromQuery] int? idUsuario)
     {
-        return Ok(await _context.Gastos.ToListAsync());
+        var query = _context.Gastos.AsQueryable();
+
+        if (idUsuario.HasValue && idUsuario.Value > 0)
+            query = query.Where(g => g.IdUsuario == idUsuario.Value);
+
+        return Ok(await query.OrderByDescending(g => g.Fecha).ToListAsync());
     }
 
     // READ BY ID
@@ -70,6 +73,8 @@ public class GastoesController : ControllerBase
         if (gasto == null) return NotFound();
         return Ok(gasto);
     }
+
+    // SUMA TOTAL
     [HttpGet("ObtenerSumaTotal")]
     public async Task<IActionResult> ObtenerSumaTotal(int id)
     {
@@ -78,16 +83,22 @@ public class GastoesController : ControllerBase
 
         var count = await _gastoService.Obtenertotaltransacciones(id);
         var suma = await _gastoService.ObtenerSumaTotalUser(id);
-
         return Ok(new { userId = id, montoTotal = suma, totaltrans = count });
     }
+
     // UPDATE
     [HttpPut("EditarGasto/{id}")]
-    public async Task<IActionResult> Actualizar(int id, Gasto gasto)
+    public async Task<IActionResult> Actualizar(int id, GastoDto gastoDto)
     {
-        if (id != gasto.Id) return BadRequest();
+        var gasto = await _context.Gastos.FindAsync(id);
+        if (gasto == null) return NotFound();
 
-        _context.Entry(gasto).State = EntityState.Modified;
+        gasto.Descripcion = gastoDto.Descripcion;
+        gasto.Categoria = gastoDto.Categoria;
+        gasto.Clasificacion = gastoDto.Clasificacion;
+        gasto.Fecha = gastoDto.Fecha;
+        gasto.Monto = gastoDto.Monto;
+
         await _context.SaveChangesAsync();
         return NoContent();
     }
@@ -96,10 +107,9 @@ public class GastoesController : ControllerBase
     [HttpDelete("EliminarGasto/{id}")]
     public async Task<IActionResult> Eliminar(int id)
     {
-        var producto = await _context.Gastos.FindAsync(id);
-        if (producto == null) return NotFound();
-
-        _context.Gastos.Remove(producto);
+        var gasto = await _context.Gastos.FindAsync(id);
+        if (gasto == null) return NotFound();
+        _context.Gastos.Remove(gasto);
         await _context.SaveChangesAsync();
         return NoContent();
     }
