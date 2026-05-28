@@ -80,8 +80,7 @@
               "RelativeToolTip": "WebApplication1\\Controllers\\UsuariosController.cs",
               "ViewState": "AgIAAFgAAAAAAAAAAAAYwIoAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-18T17:34:24.905Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-18T17:34:24.905Z"
             },
             {
               "$type": "Document",
@@ -93,8 +92,7 @@
               "RelativeToolTip": "WebApplication1\\Controllers\\GastoesController.cs",
               "ViewState": "AgIAAEEAAAAAAAAAAAAYwHMAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-05-06T04:45:44.712Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-05-06T04:45:44.712Z"
             },
             {
               "$type": "Document",
@@ -106,8 +104,7 @@
               "RelativeToolTip": "WebApplication1\\Controllers\\IngresoesController.cs",
               "ViewState": "AgIAADsAAAAAAAAAAAAYwG0AAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-18T18:06:18.863Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-18T18:06:18.863Z"
             },
             {
               "$type": "Document",
@@ -119,8 +116,7 @@
               "RelativeToolTip": "WebApplication1\\Controllers\\IAController.cs",
               "ViewState": "AgIAAIUAAAAAAAAAAAAAAJkAAAAVAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-04-30T00:05:57.949Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-04-30T00:05:57.949Z"
             },
             {
               "$type": "Document",
@@ -132,8 +128,7 @@
               "RelativeToolTip": "WebApplication1\\Program.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAADwvw8AAAAiAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-18T17:24:23.949Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-18T17:24:23.949Z"
             },
             {
               "$type": "Document",
@@ -145,8 +140,7 @@
               "RelativeToolTip": "WebApplication1\\Services\\IngresoesService.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAABwAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-04-02T00:54:22.93Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-04-02T00:54:22.93Z"
             },
             {
               "$type": "Document",
@@ -158,8 +152,7 @@
               "RelativeToolTip": "WebApplication1\\Services\\GastoesService.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAABwAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-05-28T22:23:58.998Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-05-28T22:23:58.998Z"
             },
             {
               "$type": "Document",
@@ -171,8 +164,7 @@
               "RelativeToolTip": "WebApplication1\\appsettings.json",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAABUAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
-              "WhenOpened": "2026-01-04T01:38:59.23Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-01-04T01:38:59.23Z"
             },
             {
               "$type": "Document",
@@ -182,7 +174,7 @@
               "RelativeDocumentMoniker": "WebApplication1\\Data\\ApplicationDbContext.cs",
               "ToolTip": "C:\\Users\\pablo\\Documents\\carrera\\modular\\BalanceProAPI\\WebApplication1\\WebApplication1\\Data\\ApplicationDbContext.cs",
               "RelativeToolTip": "WebApplication1\\Data\\ApplicationDbContext.cs",
-              "ViewState": "AgIAAAoAAAAAAAAAAAAmwAsAAAAwAAAAAAAAAA==",
+              "ViewState": "AgIAAAoAAAAAAAAAAAA4wAsAAAAwAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-05-27T00:31:30.483Z",
               "EditorCaption": ""
@@ -197,8 +189,7 @@
               "RelativeToolTip": "WebApplication1\\Models\\PerfilFinanciero.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-05-06T04:59:01.792Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-05-06T04:59:01.792Z"
             },
             {
               "$type": "Document",
@@ -210,8 +201,7 @@
               "RelativeToolTip": "WebApplication1\\Models\\Gasto.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAA8AAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-05-06T04:21:39.679Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-05-06T04:21:39.679Z"
             },
             {
               "$type": "Document",
@@ -223,8 +213,7 @@
               "RelativeToolTip": "WebApplication1\\Models\\Usuario.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAABMAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-03-23T00:02:39.479Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-03-23T00:02:39.479Z"
             },
             {
               "$type": "Document",
@@ -236,8 +225,7 @@
               "RelativeToolTip": "WebApplication1\\Dockerfile",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
-              "WhenOpened": "2026-04-26T23:35:52.795Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-04-26T23:35:52.795Z"
             },
             {
               "$type": "Document",
@@ -249,8 +237,7 @@
               "RelativeToolTip": "..\\..\\..\\..\\..\\Downloads\\Modular final\\Modular\\BalanceProAPI-main\\WebApplication1\\WebApplication1\\Models\\Gasto.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAoAAAAxAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-05-06T04:22:13.555Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-05-06T04:22:13.555Z"
             },
             {
               "$type": "Document",
@@ -262,8 +249,7 @@
               "RelativeToolTip": "..\\..\\..\\..\\..\\Downloads\\Modular final\\Modular\\BalanceProAPI-main\\WebApplication1\\WebApplication1\\Controllers\\IAController.cs",
               "ViewState": "AgIAADoAAAAAAAAAAIBZwFwAAAAFAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-05-06T05:43:50.886Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-05-06T05:43:50.886Z"
             }
           ]
         }
