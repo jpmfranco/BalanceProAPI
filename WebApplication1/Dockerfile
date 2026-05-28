@@ -1,8 +1,7 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /app
 
-# Copiar desde subcarpeta WebApplication1
-COPY WebApplication1/*.csproj ./WebApplication1/
+COPY WebApplication1/WebApplication1.csproj ./WebApplication1/
 RUN dotnet restore ./WebApplication1/WebApplication1.csproj
 
 COPY WebApplication1/. ./WebApplication1/
