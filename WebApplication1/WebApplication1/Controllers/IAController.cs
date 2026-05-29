@@ -25,11 +25,13 @@ namespace WebApplication1.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly IHttpClientFactory _httpClientFactory;
+        private readonly IConfiguration _configuration;
 
-        public IAController(ApplicationDbContext context, IHttpClientFactory httpClientFactory)
+        public IAController(ApplicationDbContext context, IHttpClientFactory httpClientFactory, IConfiguration configuration)
         {
             _context = context;
             _httpClientFactory = httpClientFactory;
+            _configuration = configuration;
         }
 
         // GET: recupera el perfil guardado del usuario
@@ -140,9 +142,7 @@ namespace WebApplication1.Controllers
                 };
 
                 // URL del servicio Python desde configuración
-                var pythonUrl = _context.Database.GetConnectionString() != null
-                    ? "http://python-ia:5002/predict"
-                    : "http://localhost:5002/predict";
+                var pythonUrl = _configuration["PythonIA:Url"] ?? "http://localhost:5002/predict";
 
                 var client = _httpClientFactory.CreateClient();
                 var response = await client.PostAsJsonAsync(pythonUrl, datosParaPython);
