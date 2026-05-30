@@ -5,6 +5,37 @@
     "version": "1.0"
   },
   "paths": {
+    "/api/Auth/login": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/Gastoes/CrearGasto": {
       "post": {
         "tags": [
@@ -40,6 +71,16 @@
       "get": {
         "tags": [
           "Gastoes"
+        ],
+        "parameters": [
+          {
+            "name": "idUsuario",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
         ],
         "responses": {
           "200": {
@@ -113,17 +154,17 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Gasto"
+                "$ref": "#/components/schemas/GastoDto"
               }
             },
             "text/json": {
               "schema": {
-                "$ref": "#/components/schemas/Gasto"
+                "$ref": "#/components/schemas/GastoDto"
               }
             },
             "application/*+json": {
               "schema": {
-                "$ref": "#/components/schemas/Gasto"
+                "$ref": "#/components/schemas/GastoDto"
               }
             }
           }
@@ -257,6 +298,16 @@
         "tags": [
           "Ingresoes"
         ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK"
@@ -329,17 +380,17 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Ingreso"
+                "$ref": "#/components/schemas/IngresoDto"
               }
             },
             "text/json": {
               "schema": {
-                "$ref": "#/components/schemas/Ingreso"
+                "$ref": "#/components/schemas/IngresoDto"
               }
             },
             "application/*+json": {
               "schema": {
-                "$ref": "#/components/schemas/Ingreso"
+                "$ref": "#/components/schemas/IngresoDto"
               }
             }
           }
@@ -460,17 +511,17 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Usuario"
+                "$ref": "#/components/schemas/UsuarioDto"
               }
             },
             "text/json": {
               "schema": {
-                "$ref": "#/components/schemas/Usuario"
+                "$ref": "#/components/schemas/UsuarioDto"
               }
             },
             "application/*+json": {
               "schema": {
-                "$ref": "#/components/schemas/Usuario"
+                "$ref": "#/components/schemas/UsuarioDto"
               }
             }
           }
@@ -547,36 +598,6 @@
   },
   "components": {
     "schemas": {
-      "Gasto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "descripcion": {
-            "type": "string",
-            "nullable": true
-          },
-          "categoria": {
-            "type": "string",
-            "nullable": true
-          },
-          "fecha": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "monto": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "idUsuario": {
-            "type": "integer",
-            "format": "int32"
-          }
-        },
-        "additionalProperties": false
-      },
       "GastoDto": {
         "type": "object",
         "properties": {
@@ -599,32 +620,10 @@
           "idUsuario": {
             "type": "integer",
             "format": "int32"
-          }
-        },
-        "additionalProperties": false
-      },
-      "Ingreso": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "format": "int32"
           },
-          "descripcion": {
+          "clasificacion": {
             "type": "string",
             "nullable": true
-          },
-          "fecha": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "monto": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "idUsuario": {
-            "type": "integer",
-            "format": "int32"
           }
         },
         "additionalProperties": false
@@ -651,6 +650,20 @@
         },
         "additionalProperties": false
       },
+      "LoginDto": {
+        "type": "object",
+        "properties": {
+          "correo": {
+            "type": "string",
+            "nullable": true
+          },
+          "contrasena": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "PerfilDto": {
         "type": "object",
         "properties": {
@@ -665,6 +678,10 @@
           "categoria": {
             "type": "integer",
             "format": "int32"
+          },
+          "ingresos": {
+            "type": "number",
+            "format": "double"
           },
           "tendIngresos": {
             "type": "integer",
@@ -681,47 +698,10 @@
           "planificacion": {
             "type": "integer",
             "format": "int32"
-          }
-        },
-        "additionalProperties": false
-      },
-      "Usuario": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "format": "int32"
           },
-          "nombre": {
-            "type": "string",
-            "nullable": true
-          },
-          "edad": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "genero": {
-            "type": "string",
-            "nullable": true
-          },
-          "correo": {
-            "type": "string",
-            "nullable": true
-          },
-          "celular": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "contrasena": {
-            "type": "string",
-            "nullable": true
-          },
-          "fechaRegistro": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "activo": {
-            "type": "boolean"
+          "gastosPct": {
+            "type": "number",
+            "format": "double"
           }
         },
         "additionalProperties": false
@@ -789,6 +769,9 @@
     }
   },
   "tags": [
+    {
+      "name": "Auth"
+    },
     {
       "name": "Gastoes"
     },
