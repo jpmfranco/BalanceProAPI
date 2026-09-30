@@ -1,11 +1,21 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using WebApplication1.Data;
 using WebApplication1.Services;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Render termina TLS en su proxy y habla HTTP con el contenedor:
+// confiar X-Forwarded-Proto/For para que auth y redirects vean el esquema real.
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownNetworks.Clear();
+    options.KnownProxies.Clear();
+});
 
 // ============================================
 // SERVICIOS
@@ -183,6 +193,9 @@ using (var scope = app.Services.CreateScope())
 // ============================================
 // PIPELINE
 // ============================================
+// Primero: headers del proxy (Render) antes que HSTS/redirecciones.
+app.UseForwardedHeaders();
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();

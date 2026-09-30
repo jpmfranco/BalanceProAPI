@@ -12,4 +12,7 @@ WORKDIR /app
 COPY --from=build /publish .
 ENV ASPNETCORE_URLS=http://+:8080
 EXPOSE 8080
+# No correr como root: el puerto 8080 (>1024) no lo requiere y la app
+# no escribe nada al disco. La imagen ya trae el usuario 'app'.
+USER app
 ENTRYPOINT ["dotnet", "WebApplication1.dll"]
