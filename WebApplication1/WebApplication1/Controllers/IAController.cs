@@ -163,20 +163,57 @@ namespace WebApplication1.Controllers
                             totalGastos,
                             porcentajeGasto = gastoPct
                         },
-                        prediccionIA = prediccion
+                        prediccionIA = prediccion,
+                        iaDisponible = true
                     });
                 }
 
-                return StatusCode(502, "El servicio de IA (Python) no respondió correctamente.");
+                // Python respondió con error: el perfil YA quedó guardado
+                // (upsert previo); se devuelve el resumen sin proyección.
+                return ResumenSinIA(totalIngresos, totalGastos, gastoPct);
             }
             catch (HttpRequestException)
             {
-                return StatusCode(503, "No se pudo conectar al servicio de IA.");
+                // Sin servicio Python (PYTHON_IA_URL sin configurar): degradar,
+                // no fallar. El perfil ya quedó guardado.
+                var totales = await Totales(usuarioId);
+                return ResumenSinIA(totales.ingresos, totales.gastos, totales.gastoPct);
             }
             catch (Exception ex)
             {
                 return StatusCode(500, $"Error interno: {ex.Message}");
             }
+        }
+
+        private async Task<(decimal ingresos, decimal gastos, double gastoPct)> Totales(int usuarioId)
+        {
+            var totalIngresos = await _context.Ingresos
+                .Where(i => i.IdUsuario == usuarioId)
+                .SumAsync(i => (decimal)i.Monto);
+            var totalGastos = await _context.Gastos
+                .Where(g => g.IdUsuario == usuarioId)
+                .SumAsync(g => (decimal)g.Monto);
+            double gastoPct = totalIngresos > 0
+                ? (double)(totalGastos / totalIngresos) * 100
+                : 0;
+            return (totalIngresos, totalGastos, gastoPct);
+        }
+
+        private OkObjectResult ResumenSinIA(decimal totalIngresos, decimal totalGastos, double gastoPct)
+        {
+            return Ok(new
+            {
+                mensaje = "Perfil guardado. IA no disponible por el momento.",
+                resumenFinanciero = new
+                {
+                    totalIngresos,
+                    totalGastos,
+                    porcentajeGasto = gastoPct
+                },
+                prediccionIA = (object?)null,
+                advertencia = "El servicio de IA (Python) no está configurado; se muestra tu resumen sin proyección.",
+                iaDisponible = false
+            });
         }
     }
 
