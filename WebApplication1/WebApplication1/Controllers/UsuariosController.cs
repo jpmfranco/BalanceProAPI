@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WebApplication1.Data;
 using WebApplication1.Models;
@@ -6,18 +7,19 @@ using BCrypt.Net;
 
 public class UsuarioDto
 {
-    public string Nombre { get; set; }
+    public string Nombre { get; set; } = string.Empty;
     public int Edad { get; set; }
-    public string Genero { get; set; }
-    public string Correo { get; set; }
+    public string Genero { get; set; } = string.Empty;
+    public string Correo { get; set; } = string.Empty;
     public long Celular { get; set; }
-    public string Contrasena { get; set; }
+    public string Contrasena { get; set; } = string.Empty;
     public DateTime FechaRegistro { get; set; }
     public bool Activo { get; set; }
 }
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class UsuariosController : ControllerBase
 {
     private readonly ApplicationDbContext _context;
@@ -27,7 +29,8 @@ public class UsuariosController : ControllerBase
         _context = context;
     }
 
-    // CREATE
+    // CREATE (registro público)
+    [AllowAnonymous]
     [HttpPost("CrearUsuario")]
     public async Task<IActionResult> Crear(UsuarioDto user)
     {
@@ -37,7 +40,7 @@ public class UsuariosController : ControllerBase
         if (existe)
             return BadRequest(new { mensaje = "El correo ya está registrado" });
 
-        var usuario = new Usuario
+        var usuario = new Usuarios
         {
             Nombre = user.Nombre,
             Genero = user.Genero,
@@ -58,7 +61,7 @@ public class UsuariosController : ControllerBase
         return Ok(usuario);
     }
 
-    // READ ALL
+    // READ ALL (sin contraseña)
     [HttpGet("ObtenerUsuarios")]
     public async Task<IActionResult> ObtenerUsuarios()
     {
@@ -73,10 +76,9 @@ public class UsuariosController : ControllerBase
                 u.Celular,
                 u.FechaRegistro,
                 u.Activo
-                // ✅ Nunca retornar Contrasena
+                // Nunca retornar Contrasena
             })
             .ToListAsync();
-
         return Ok(usuarios);
     }
 

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WebApplication1.Data;
 using WebApplication1.Models;
@@ -6,16 +7,17 @@ using WebApplication1.Services;
 
 public class GastoDto
 {
-    public string Descripcion { get; set; }
-    public string Categoria { get; set; }
+    public string Descripcion { get; set; } = string.Empty;
+    public string Categoria { get; set; } = string.Empty;
     public DateTime Fecha { get; set; }
-    public int Monto { get; set; }
+    public decimal Monto { get; set; }
     public int IdUsuario { get; set; }
-    public string Clasificacion { get; set; }
+    public string Clasificacion { get; set; } = string.Empty;
 }
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class GastoesController : ControllerBase
 {
     private readonly ApplicationDbContext _context;
@@ -38,7 +40,7 @@ public class GastoesController : ControllerBase
         if (!usuarioExiste)
             return BadRequest(new { mensaje = "Usuario no encontrado" });
 
-        var gasto = new Gasto
+        var gasto = new Gastos
         {
             Descripcion = gas.Descripcion,
             Categoria = gas.Categoria,
@@ -60,7 +62,7 @@ public class GastoesController : ControllerBase
         var query = _context.Gastos.AsQueryable();
 
         if (idUsuario.HasValue && idUsuario.Value > 0)
-            query = query.Where(g => g.IdUsuario == idUsuario.Value);
+            query = query.Where(g => g.IdUsuario == idUsuario);
 
         return Ok(await query.OrderByDescending(g => g.Fecha).ToListAsync());
     }
@@ -76,7 +78,7 @@ public class GastoesController : ControllerBase
 
     // SUMA TOTAL
     [HttpGet("ObtenerSumaTotal")]
-    public async Task<IActionResult> ObtenerSumaTotal(int id)
+    public async Task<IActionResult> ObtenerSumaTotal([FromQuery] int id)
     {
         if (id <= 0)
             return BadRequest("El id no es válido");

@@ -12,7 +12,7 @@ namespace WebApplication1.Services
             _context = context;
         }
 
-        public async Task<int> ObtenerSumaTotalUser(int id)
+        public async Task<decimal> ObtenerSumaTotalUser(int id)
         {
             return await _context.Ingresos
                 .Where(g => g.IdUsuario == id)

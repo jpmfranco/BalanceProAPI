@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WebApplication1.Data;
 using WebApplication1.Models;
@@ -6,14 +7,15 @@ using WebApplication1.Services;
 
 public class IngresoDto
 {
-    public string Descripcion { get; set; }
+    public string Descripcion { get; set; } = string.Empty;
     public DateTime Fecha { get; set; }
-    public int Monto { get; set; }
+    public decimal Monto { get; set; }
     public int IdUsuario { get; set; }
 }
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class IngresoesController : ControllerBase
 {
     private readonly ApplicationDbContext _context;
@@ -51,12 +53,12 @@ public class IngresoesController : ControllerBase
 
     // READ ALL
     [HttpGet("ObtenerIngreso")]
-    public async Task<IActionResult> ObtenerTodos([FromQuery] int? id)
+    public async Task<IActionResult> ObtenerTodos([FromQuery] int id)
     {
         var query = _context.Ingresos.AsQueryable();
 
-        if (id.HasValue && id.Value > 0)
-            query = query.Where(i => i.IdUsuario == id.Value);
+        if (id > 0)
+            query = query.Where(i => i.IdUsuario == id);
 
         return Ok(await query.OrderByDescending(i => i.Fecha).ToListAsync());
     }
@@ -72,7 +74,7 @@ public class IngresoesController : ControllerBase
 
     // SUMA TOTAL
     [HttpGet("ObtenerSumaTotal")]
-    public async Task<IActionResult> ObtenerSumaTotal(int id)
+    public async Task<IActionResult> ObtenerSumaTotal([FromQuery] int id)
     {
         if (id <= 0)
             return BadRequest("El id no es válido");

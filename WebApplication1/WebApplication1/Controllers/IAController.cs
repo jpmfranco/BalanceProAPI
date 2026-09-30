@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WebApplication1.Data;
@@ -21,6 +22,7 @@ namespace WebApplication1.Controllers
 
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class IAController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
@@ -141,8 +143,10 @@ namespace WebApplication1.Controllers
                     planificacion = perfil.Planificacion
                 };
 
-                // URL del servicio Python desde configuración
-                var pythonUrl = _configuration["PythonIA:Url"] ?? "http://localhost:5002/predict";
+                // URL del servicio Python: env PYTHON_IA_URL > config PythonIA:Url > default local
+                var pythonUrl = Environment.GetEnvironmentVariable("PYTHON_IA_URL")
+                    ?? _configuration["PythonIA:Url"]
+                    ?? "http://localhost:5002/predict";
 
                 var client = _httpClientFactory.CreateClient();
                 var response = await client.PostAsJsonAsync(pythonUrl, datosParaPython);
@@ -178,13 +182,13 @@ namespace WebApplication1.Controllers
 
     public class PythonResponse
     {
-        public string status { get; set; }
-        public List<ProyeccionData> proyecciones { get; set; }
+        public string status { get; set; } = string.Empty;
+        public List<ProyeccionData> proyecciones { get; set; } = new();
     }
 
     public class ProyeccionData
     {
-        public string mes { get; set; }
+        public string mes { get; set; } = string.Empty;
         public double valor { get; set; }
     }
 }

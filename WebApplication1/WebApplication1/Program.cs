@@ -23,20 +23,79 @@ if (builder.Environment.IsDevelopment())
 }
 
 // ============================================
-// BASE DE DATOS (UN SOLO DBCONTEXT)
+// BASE DE DATOS (SQL Server local / PostgreSQL en prod)
+// Prod (Render) usa DATABASE_URL o ConnectionStrings__DefaultConnection
+// con formato postgres:// o Host=...; acepta ambos.
 // ============================================
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+static string ToNpgsqlConnectionString(string raw)
+{
+    if (raw.StartsWith("postgres://", StringComparison.OrdinalIgnoreCase) ||
+        raw.StartsWith("postgresql://", StringComparison.OrdinalIgnoreCase))
+    {
+        var uri = new Uri(raw);
+        // Las credenciales en la URL pueden venir percent-encoded: decodificarlas
+        var userInfo = Uri.UnescapeDataString(uri.UserInfo).Split(':', 2);
+        var db = Uri.UnescapeDataString(uri.AbsolutePath.TrimStart('/'));
+        // sslmode via query (?sslmode=require) o Prefer por defecto:
+        // negocia SSL si el servidor lo exige (Render externo) y baja a
+        // texto plano en red privada interna donde no hay TLS.
+        var sslmode = "Prefer";
+        var q = uri.Query.TrimStart('?');
+        foreach (var part in q.Split('&', StringSplitOptions.RemoveEmptyEntries))
+        {
+            var kv = part.Split('=', 2);
+            if (kv.Length == 2 && kv[0].Equals("sslmode", StringComparison.OrdinalIgnoreCase)
+                && kv[1].Length > 0)
+                sslmode = kv[1];
+        }
+        return $"Host={uri.Host};Port={uri.Port};Database={db};Username={userInfo[0]};Password={(userInfo.Length > 1 ? userInfo[1] : "")};SslMode={sslmode};Trust Server Certificate=true";
+    }
+    return raw;
+}
 
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseNpgsql(connectionString));
+static bool IsNpgsqlConnectionString(string cs) =>
+    cs.StartsWith("postgres://", StringComparison.OrdinalIgnoreCase) ||
+    cs.StartsWith("postgresql://", StringComparison.OrdinalIgnoreCase) ||
+    cs.Contains("Host=", StringComparison.OrdinalIgnoreCase);
+
+var connectionString =
+    Environment.GetEnvironmentVariable("DATABASE_URL")
+    ?? builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? throw new InvalidOperationException("Connection string no configurada.");
+
+if (IsNpgsqlConnectionString(connectionString))
+{
+    var npgsqlCs = ToNpgsqlConnectionString(connectionString);
+    builder.Services.AddDbContext<ApplicationDbContext>(options =>
+        options.UseNpgsql(npgsqlCs));
+}
+else
+{
+    // Azure SQL serverless se pausa con inactividad: reintentos ante
+    // transitorios (incluido el wake-up) y timeout amplio para el resume.
+    builder.Services.AddDbContext<ApplicationDbContext>(options =>
+        options.UseSqlServer(connectionString, sql => sql
+            .EnableRetryOnFailure(
+                maxRetryCount: 5,
+                maxRetryDelay: TimeSpan.FromSeconds(10),
+                errorNumbersToAdd: null)
+            .CommandTimeout(60)));
+}
 
 // ============================================
-// JWT
+// JWT (env JWT_SECRET tiene prioridad; no commitear el secreto real)
 // ============================================
-var jwtSecret = builder.Configuration["Jwt:Secret"];
+var jwtSecret =
+    Environment.GetEnvironmentVariable("JWT_SECRET")
+    ?? builder.Configuration["Jwt:Secret"];
 
 if (string.IsNullOrEmpty(jwtSecret) || jwtSecret.Length < 32)
     throw new Exception("JWT Secret inválido. Mínimo 32 caracteres.");
+
+// En Production el secreto debe venir del entorno, nunca del placeholder commiteado
+if (builder.Environment.IsProduction() &&
+    Environment.GetEnvironmentVariable("JWT_SECRET") is not { Length: >= 32 })
+    throw new Exception("JWT_SECRET no configurado en el entorno de producción.");
 
 var key = Encoding.ASCII.GetBytes(jwtSecret);
 
@@ -77,9 +136,13 @@ builder.Services.AddAuthorization();
 // ============================================
 // CORS
 // ============================================
-var allowedOrigins = builder.Configuration
+// Normaliza orígenes CORS (sin slash final: el Origin del browser nunca lo trae)
+var allowedOrigins = (builder.Configuration
     .GetSection("AllowedOrigins")
-    .Get<string[]>() ?? new[] { "http://localhost:4200" };
+    .Get<string[]>() ?? new[] { "http://localhost:4200" })
+    .Select(o => o.Trim().TrimEnd('/'))
+    .Where(o => o.Length > 0)
+    .ToArray();
 
 builder.Services.AddCors(options =>
 {

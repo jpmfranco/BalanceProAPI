@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -9,8 +10,8 @@ using WebApplication1.Models;
 
 public class LoginDto
 {
-    public string Correo { get; set; }
-    public string Contrasena { get; set; }
+    public string Correo { get; set; } = string.Empty;
+    public string Contrasena { get; set; } = string.Empty;
 }
 
 [ApiController]
@@ -27,6 +28,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("login")]
+    [AllowAnonymous]
     public async Task<IActionResult> Login(LoginDto loginDto)
     {
         if (string.IsNullOrEmpty(loginDto.Correo) || string.IsNullOrEmpty(loginDto.Contrasena))
@@ -65,9 +67,11 @@ public class AuthController : ControllerBase
         });
     }
 
-    private string GenerarToken(Usuario usuario)
+    private string GenerarToken(Usuarios usuario)
     {
-        var key = Encoding.ASCII.GetBytes(_configuration["Jwt:Secret"]);
+        var secret = _configuration["Jwt:Secret"]
+            ?? throw new InvalidOperationException("JWT Secret no configurado.");
+        var key = Encoding.ASCII.GetBytes(secret);
 
         var claims = new List<Claim>
         {
