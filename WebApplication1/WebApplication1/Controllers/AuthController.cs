@@ -14,6 +14,12 @@ public class LoginDto
     public string Contrasena { get; set; } = string.Empty;
 }
 
+public class RestablecerDto
+{
+    public string Correo { get; set; } = string.Empty;
+    public string NuevaContrasena { get; set; } = string.Empty;
+}
+
 [ApiController]
 [Route("api/[controller]")]
 public class AuthController : ControllerBase
@@ -65,6 +71,33 @@ public class AuthController : ControllerBase
                 usuario.Correo
             }
         });
+    }
+
+    // Restablece la contraseña solo con el correo (sin token previo).
+    // Pensado para uso personal; no usar así en apps multiusuario
+    // sin verificación adicional (token por email, etc.).
+    [HttpPost("restablecer")]
+    [AllowAnonymous]
+    public async Task<IActionResult> Restablecer(RestablecerDto dto)
+    {
+        if (string.IsNullOrWhiteSpace(dto.Correo) || string.IsNullOrEmpty(dto.NuevaContrasena))
+            return BadRequest(new { mensaje = "Correo y nueva contraseña son requeridos" });
+
+        if (dto.NuevaContrasena.Length < 6)
+            return BadRequest(new { mensaje = "La contraseña debe tener al menos 6 caracteres" });
+
+        var usuario = await _context.Usuarios
+            .FirstOrDefaultAsync(u =>
+                u.Correo == dto.Correo.ToLower().Trim() &&
+                u.Activo);
+
+        if (usuario == null)
+            return NotFound(new { mensaje = "No existe una cuenta activa con ese correo" });
+
+        usuario.Contrasena = BCrypt.Net.BCrypt.HashPassword(dto.NuevaContrasena);
+        await _context.SaveChangesAsync();
+
+        return Ok(new { mensaje = "Contraseña actualizada. Inicia sesión con tu nueva contraseña." });
     }
 
     private string GenerarToken(Usuarios usuario)
